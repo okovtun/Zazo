@@ -3,6 +3,9 @@ using namespace std;
 
 #define tab "\t"
 #define delimiter "\n-----------------------------------------------------------\n"
+//#define - определеить
+//Директива #define создает макроопределение (макрос)
+//Директива #define показыват что заменить, чес заменить
 
 class Element
 {
@@ -33,23 +36,51 @@ class ForwardList
 	Element* Head;
 	unsigned int size;
 public:
-	ForwardList()
+	ForwardList()	//DefaultConstructor - Конструктор по умолчанию
 	{
 		this->Head = nullptr;//Если Голова указывает на 0, значит список пуст
 		this->size = 0;	
 		cout << "LConstructor:\t" << this << endl;
 	}
+	ForwardList(const ForwardList& other)
+	{
+		Element* Temp = other.Head;
+		while (Temp)
+		{
+			push_back(Temp->Data);
+			Temp = Temp->pNext;
+		}
+		cout << "CopyConstructor:" << this << endl;
+	}
 	~ForwardList()
 	{
+		while (Head != nullptr)pop_front();
 		cout << "LDestuctor:\t" << this << endl;
+	}
+
+	//				Operators:
+	ForwardList& operator=(const ForwardList& other)
+	{
+		if (this == &other)return *this;	//Ключевое слово return прерывает работу функции
+											//и возвращает значение и управление на место вызова
+		while (Head)pop_front();
+		Element* Temp = other.Head;
+		while (Temp)
+		{
+			push_back(Temp->Data);
+			Temp = Temp->pNext;
+		}
+		cout << "CopyAssignment:" << this << endl;
+		return *this;
 	}
 
 	//				Adding elements:
 	void push_front(int Data)	//Добавляет значение в начало списка
 	{
-		Element* New = new Element(Data);
+		/*Element* New = new Element(Data, Head);
 		New->pNext = Head;
-		Head = New;
+		Head = New;*/
+		Head = new Element(Data, Head);
 		size++;
 	}
 	void push_back(int Data)
@@ -59,13 +90,13 @@ public:
 			push_front(Data);
 			return;
 		}
-		Element* New = new Element(Data);
+		//Element* New = new Element(Data);
 		Element* Temp = Head;
 		while (Temp->pNext)
 		{
 			Temp = Temp->pNext;
 		}//После этого цикла мы оказались в последнем элементе
-		Temp->pNext = New;
+		Temp->pNext = new Element(Data);
 		size++;
 	}
 	void insert(int index, int data)
@@ -85,9 +116,10 @@ public:
 		for (int i = 0; i < index - 1; i++)
 			Temp = Temp->pNext;
 		//2) Содаем новый элемент, и добавляем его в список:
-		Element* New = new Element(data);
+		/*Element* New = new Element(data);
 		New->pNext = Temp->pNext;
-		Temp->pNext = New;
+		Temp->pNext = New;*/
+		Temp->pNext = new Element(data, Temp->pNext);
 		size++;
 	}
 
@@ -116,14 +148,16 @@ public:
 	//				Methods:
 	void print()
 	{
-		Element* Temp = Head;	//Temp - это итератор.
-								//Итератор - это указатель, при помощи которого можно получить доступ
-								//к элементам структуры данных.
-		while (Temp)
-		{
+		//Element* Temp = Head;	//Temp - это итератор.
+		//						//Итератор - это указатель, при помощи которого можно получить доступ
+		//						//к элементам структуры данных.
+		//while (Temp)
+		//{
+		//	cout << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
+		//	Temp = Temp->pNext;	//Переход на следующий элемент
+		//}
+		for(Element* Temp=Head; Temp; Temp=Temp->pNext)
 			cout << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
-			Temp = Temp->pNext;	//Переход на следующий элемент
-		}
 		cout << "Количество элементов списка: " << size << endl;
 		cout << "Общее колчество элементов:   " << Element::count << endl;
 	}
@@ -131,6 +165,7 @@ public:
 
 //#define BASE_CHECK
 //define - определить
+//#define COPY_METHODS_CHECK
 
 void main()
 {
@@ -142,6 +177,7 @@ void main()
 	{
 		list.push_front(rand() % 100);
 	}
+	list = list;
 	list.print();
 
 #if defined BASE_CHECK
@@ -163,9 +199,25 @@ void main()
 	list.print();
 #endif // BASE_CHECK
 
-	ForwardList list2;
+	/*ForwardList list2;
 	list2.push_back(123);
 	list2.push_back(234);
 	list2.push_back(345);
+	list2.print();*/
+
+#ifdef COPY_METHODS_CHECK
+	ForwardList list2 = list;	//CopyConstructor
 	list2.print();
+
+	ForwardList list3;	//DefaultConstructor - Конструктор по умолчанию
+	list3 = list2;	//CopyAssignment - Оператор приваивания
+	list3.print();
+
+	int a = 2;
+	int b = 3;
+	a = b;	//Assignment operator - Оператор присваивания  
+#endif // COPY_METHODS_CHECK
+
+	ForwardList list = { 3,5,8,13,21 };
+	list.print();
 }
