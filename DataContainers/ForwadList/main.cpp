@@ -1,5 +1,8 @@
 ﻿#include<iostream>
 using namespace std;
+using std::cin;
+using std::cout;
+using std::endl;
 
 #define tab "\t"
 #define delimiter "\n-----------------------------------------------------------\n"
@@ -26,24 +29,91 @@ public:
 		cout << "EDestructor:\t" << this << endl;
 	}
 	friend class ForwardList;
+	friend class Iterator;
 };
 
 int Element::count = 0;	//Инициализация статической переменной
 //:: - Оператор разрешения видимости
+
+class Iterator
+{
+	Element* Temp;
+public:
+	Iterator(Element* Temp = nullptr) :Temp(Temp)
+	{
+		//this->Temp = Temp;
+		cout << "ITConstructor:\t" << this << endl;
+	}
+	~Iterator()
+	{
+		cout << "ITDestructor:\t" << this << endl;
+	}
+
+	Iterator& operator++()
+	{
+		Temp = Temp->pNext;
+		return *this;//this - это указатель на объект, для которого вызывается метод.
+		//Оператор - это функция, имя которой состоит из ключевого слова operator и знака оператора
+		//operator++ является методом, поскольку он перегружен внутри класса.
+		//Метод - это функция внутри класса.
+	}
+
+	bool operator==(const Iterator& other)const
+	{
+		return this->Temp == other.Temp;
+	}
+	bool operator!=(const Iterator& other)const
+	{
+		return this->Temp != other.Temp;
+	}
+
+	int& operator*()
+	{
+		return Temp->Data;
+	}
+};
 
 class ForwardList
 {
 	Element* Head;
 	unsigned int size;
 public:
+	Element* getHead()const
+	{
+		return Head;
+	}
+
+	Iterator begin()
+	{
+		return Head;
+	}
+	Iterator end()
+	{
+		return nullptr;
+	}
+
 	ForwardList()	//DefaultConstructor - Конструктор по умолчанию
 	{
 		this->Head = nullptr;//Если Голова указывает на 0, значит список пуст
-		this->size = 0;	
+		this->size = 0;
 		cout << "LConstructor:\t" << this << endl;
 	}
-	ForwardList(const ForwardList& other)
+	ForwardList(const initializer_list<int>& il) :ForwardList()
 	{
+		//begin() - возвращает итератор на начало контейнера
+		//end()   - возвращает итератор на конец контейнера
+		cout << typeid(il.begin()).name() << endl;
+		for (int const* it = il.begin(); it != il.end(); it++)
+		{
+			//it - это итератор.
+			push_back(*it);	//*it - разыменовывает указатель
+							//* - оператор разыменования возвращает значение по адресу
+		}
+	}
+	ForwardList(const ForwardList& other) :ForwardList()	//Делегирование конструкторов
+	{
+		/*this->Head = nullptr;
+		this->size = 0;*/
 		Element* Temp = other.Head;
 		while (Temp)
 		{
@@ -123,6 +193,16 @@ public:
 		size++;
 	}
 
+	void erase(int index)
+	{
+		Element* Temp = Head;
+		for (int i = 0; i < index - 1; i++)
+			Temp = Temp->pNext;
+		Element* to_del = Temp->pNext;	//1) Запоминаем адрес удаляемого элемента
+		Temp->pNext = Temp->pNext->pNext;	//2) Исключаем удаляемый элемент из списка
+		delete to_del;	//3) Удаляем элемент из памяти
+	}
+
 	//				Removing elements:
 	void pop_front()
 	{
@@ -143,7 +223,7 @@ public:
 		Temp->pNext = nullptr;
 		size--;
 	}
-	
+
 
 	//				Methods:
 	void print()
@@ -156,16 +236,17 @@ public:
 		//	cout << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
 		//	Temp = Temp->pNext;	//Переход на следующий элемент
 		//}
-		for(Element* Temp=Head; Temp; Temp=Temp->pNext)
+		for (Element* Temp = Head; Temp; Temp = Temp->pNext)
 			cout << Temp << tab << Temp->Data << tab << Temp->pNext << endl;
 		cout << "Количество элементов списка: " << size << endl;
 		cout << "Общее колчество элементов:   " << Element::count << endl;
 	}
 };
 
-//#define BASE_CHECK
+#define BASE_CHECK
 //define - определить
 //#define COPY_METHODS_CHECK
+//#define ITERATORS_CHECK
 
 void main()
 {
@@ -181,7 +262,7 @@ void main()
 	list.print();
 
 #if defined BASE_CHECK
-	cout << delimiter << endl;
+	/*cout << delimiter << endl;
 	list.push_back(123);
 	list.print();
 	cout << delimiter << endl;
@@ -190,12 +271,15 @@ void main()
 	cout << delimiter << endl;
 	list.pop_back();
 	list.print();
-	cout << delimiter << endl;
+	cout << delimiter << endl;*/
 	int index;
 	int value;
 	cout << "Введите индекс добавляемого элемента: "; cin >> index;
 	cout << "Введите значение добавляемого элемента: "; cin >> value;
 	list.insert(index, value);
+	list.print();
+	cout << "Введите индекс удаляемого элемента: "; cin >> index;
+	list.erase(index);
 	list.print();
 #endif // BASE_CHECK
 
@@ -218,6 +302,36 @@ void main()
 	a = b;	//Assignment operator - Оператор присваивания  
 #endif // COPY_METHODS_CHECK
 
-	ForwardList list = { 3,5,8,13,21 };
+#ifdef ITERATORS_CHECK
+			/*int arr[] = { 3,5,8,13,21 };
+for (int i = 0; i < sizeof(arr)/sizeof(int); i++)
+{
+	cout << arr[i] << tab;
+}
+cout << endl;
+for (int i : arr)
+{
+	cout << i << tab;
+}
+cout << endl;*/
+
+	ForwardList list = { 3,5,8,13,21 };	//В классе ForwardList нужен конструктор с одним параметром типа initializer_list.
 	list.print();
+	//private:
+	//public:
+	//protected:
+
+	//get/set - методы
+	/*for (Iterator it = list.getHead(); it != nullptr; ++it)
+	{
+		cout << *it << tab;
+	}
+	cout << endl;*/
+	for (int i : list)	//range-base for
+	{
+		cout << i << tab;
+	}
+	cout << endl;
+#endif // ITERATORS_CHECK
+
 }
